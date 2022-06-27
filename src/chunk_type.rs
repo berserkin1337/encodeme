@@ -3,14 +3,13 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::result::Result;
 use std::str::FromStr;
-use std::string::ToString;
 #[derive(Debug, Clone)]
 pub struct ChunkType {
     datatype: [u8; 4],
 }
 
 impl TryFrom<[u8; 4]> for ChunkType {
-    type Error = &'static str;
+    type Error = anyhow::Error;
     fn try_from(value: [u8; 4]) -> Result<Self, Self::Error> {
         Ok(ChunkType { datatype: value })
     }
