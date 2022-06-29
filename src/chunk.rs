@@ -5,11 +5,13 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::io::BufReader;
 use std::io::Read;
-struct Chunk {
-    length: u32,
-    chunk_type: ChunkType,
-    data: Vec<u8>,
-    crc: u32,
+
+#[derive(Debug,Clone)]
+pub struct Chunk {
+    pub length: u32,
+    pub chunk_type: ChunkType,
+    pub data: Vec<u8>,
+    pub crc: u32,
 }
 
 impl TryFrom<&[u8]> for Chunk {
@@ -64,7 +66,7 @@ impl fmt::Display for Chunk {
 }
 
 impl Chunk {
-    fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
+    pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
         let length: usize = data.len();
         // Calculate the crc32 of the data
         let crccalc : Vec<u8>= chunk_type.bytes().iter().chain(data.iter()).copied().collect();
@@ -79,25 +81,25 @@ impl Chunk {
         }
     }
 
-    fn length(&self) -> u32 {
+    pub fn length(&self) -> u32 {
         self.length
     }
 
-    fn chunk_type(&self) -> &ChunkType {
+    pub fn chunk_type(&self) -> &ChunkType {
         &self.chunk_type
     }
 
-    fn data(&self) -> &[u8] {
+    pub fn data(&self) -> &[u8] {
         &self.data
     }
 
-    fn crc(&self) -> u32 {
+    pub fn crc(&self) -> u32 {
         self.crc
     }
-    fn data_as_string(&self) -> Result<String> {
+    pub fn data_as_string(&self) -> Result<String> {
         Ok(String::from_utf8(self.data.clone())?)
     }
-    fn as_bytes(&self) -> Vec<u8> {
+    pub fn as_bytes(&self) -> Vec<u8> {
         let bytes = self
             .length
             .to_be_bytes()

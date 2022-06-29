@@ -1,11 +1,11 @@
 use std::cmp::PartialEq;
 use std::convert::TryFrom;
-use std::fmt;
 use std::result::Result;
 use std::str::FromStr;
-#[derive(Debug, Clone)]
+use std::{any, fmt};
+#[derive(Debug, Clone,Copy)]
 pub struct ChunkType {
-    datatype: [u8; 4],
+    pub datatype: [u8; 4],
 }
 
 impl TryFrom<[u8; 4]> for ChunkType {
@@ -14,12 +14,33 @@ impl TryFrom<[u8; 4]> for ChunkType {
         Ok(ChunkType { datatype: value })
     }
 }
-
+impl TryFrom<Vec<u8>> for ChunkType {
+    type Error = anyhow::Error;
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        if value.len() != 4 {
+            return Err(anyhow::anyhow!("The length of the chunk type is not 4"));
+        }
+        let mut datatype: [u8; 4] = [0; 4];
+        datatype.copy_from_slice(&value);
+        Ok(ChunkType { datatype })
+    }
+}
 pub fn is_valid_byte(byte: u8) -> bool {
     (byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122)
 }
 
 impl ChunkType {
+    pub fn chunk_type(&self) -> String {
+        let mut chunk_type = String::new();
+        for byte in self.datatype.iter() {
+            if is_valid_byte(*byte) {
+                chunk_type.push(*byte as char);
+            } else {
+                chunk_type.push('_');
+            }
+        }
+        chunk_type
+    }
     pub fn bytes(&self) -> [u8; 4] {
         self.datatype
     }
@@ -66,10 +87,10 @@ impl PartialEq for ChunkType {
 }
 
 impl FromStr for ChunkType {
-    type Err = &'static str;
+    type Err = anyhow::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.len() != 4 {
-            return Err("The length of the string passed should be equal to 4");
+            return Err(anyhow::anyhow!("The length of the chunk type is not 4"));
         }
         let byte_arr = s.as_bytes();
         let mut new_arr: [u8; 4] = [0; 4];
@@ -77,9 +98,7 @@ impl FromStr for ChunkType {
         new_arr[..4].copy_from_slice(&byte_arr[..4]);
         let new_chunk = ChunkType { datatype: new_arr };
         if !new_chunk.isAlpha() {
-            return Err(
-                "The type codes are restricted to consist of uppercase and lowercase ASCII letters",
-            );
+            return Err(anyhow::anyhow!("The chunk type is not valid"));
         }
 
         Ok(ChunkType { datatype: new_arr })
