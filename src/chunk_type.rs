@@ -2,7 +2,7 @@ use std::cmp::PartialEq;
 use std::convert::TryFrom;
 use std::result::Result;
 use std::str::FromStr;
-use std::{any, fmt};
+use std::{fmt};
 #[derive(Debug, Clone,Copy)]
 pub struct ChunkType {
     pub datatype: [u8; 4],
@@ -26,7 +26,7 @@ impl TryFrom<Vec<u8>> for ChunkType {
     }
 }
 pub fn is_valid_byte(byte: u8) -> bool {
-    (byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122)
+    (65..=90).contains(&byte) || ((97..=122).contains(&byte) )
 }
 
 impl ChunkType {
@@ -68,7 +68,7 @@ impl ChunkType {
                 return false;
             }
         }
-        return true;
+        true
     }
     pub fn isAlpha(&self) -> bool {
         for i in 0..4 {
@@ -76,7 +76,7 @@ impl ChunkType {
                 return false;
             }
         }
-        return true;
+        true
     }
 }
 

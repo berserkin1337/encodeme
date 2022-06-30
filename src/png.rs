@@ -1,6 +1,5 @@
 use crate::{chunk::Chunk, chunk_type::ChunkType};
 use anyhow::{Ok, Result};
-use hex_slice::AsHex;
 use std::{
     convert::TryFrom,
     fmt::Display,
@@ -16,7 +15,7 @@ impl TryFrom<&[u8]> for Png {
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         let mut buf = BufReader::new(value);
         let mut header: [u8; 8] = [0; 8];
-        buf.read_exact(&mut header);
+        buf.read_exact(&mut header)?;
         if header != Png::STANDARD_HEADER {
             return Err(anyhow::anyhow!("The header of the PNG is not equal to the standard header"));
         }
@@ -57,8 +56,8 @@ impl TryFrom<&[u8]> for Png {
 impl Display for Png {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Png {{",)?;
-        writeln!(f, "  Header: {:?}", self.header.to_vec());
-        writeln!(f, "  Chunks: {:?}", self.chunks.to_vec());
+        writeln!(f, "  Header: {:?}", self.header.to_vec())?;
+        writeln!(f, "  Chunks: {:?}", self.chunks.to_vec())?;
         writeln!(f, "}}")
     }
 }
@@ -68,7 +67,7 @@ impl Png {
     fn from_chunks(chunks: Vec<Chunk>) -> Png {
         Png {
             header: Png::STANDARD_HEADER,
-            chunks: chunks,
+            chunks,
         }
     }
     fn append_chunk(&mut self, chunk: Chunk) {
@@ -119,12 +118,9 @@ mod tests {
     use std::str::FromStr;
 
     fn testing_chunks() -> Vec<Chunk> {
-        let mut chunks = Vec::new();
-
-        chunks.push(chunk_from_strings("FrSt", "I am the first chunk").unwrap());
+        let mut chunks = vec![chunk_from_strings("FrSt", "I am the first chunk").unwrap()];
         chunks.push(chunk_from_strings("miDl", "I am another chunk").unwrap());
         chunks.push(chunk_from_strings("LASt", "I am the last chunk").unwrap());
-
         chunks
     }
 
@@ -134,11 +130,8 @@ mod tests {
     }
 
     fn chunk_from_strings(chunk_type: &str, data: &str) -> Result<Chunk> {
-        use std::str::FromStr;
-
         let chunk_type = ChunkType::from_str(chunk_type)?;
         let data: Vec<u8> = data.bytes().collect();
-
         Ok(Chunk::new(chunk_type, data))
     }
 
@@ -251,7 +244,7 @@ mod tests {
     fn test_as_bytes() {
         let png = Png::try_from(&PNG_FILE[..]).unwrap();
         let actual = png.as_bytes();
-        let expected: Vec<u8> = PNG_FILE.iter().copied().collect();
+        let expected: Vec<u8> = PNG_FILE.to_vec();
         assert_eq!(actual, expected);
     }
 
