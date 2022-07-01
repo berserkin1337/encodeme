@@ -12,7 +12,7 @@ Below on the left is the original image and on the right is the image with a sec
 
 ## Building
 ```bash
-cargo build --release
+$ cargo build --release
 ```
 ## Usage
 ```bash
