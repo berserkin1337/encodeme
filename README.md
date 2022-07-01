@@ -16,7 +16,7 @@ cargo build --release
 ```
 ## Usage
 ```bash
-./target/release/encodeme -h
+$ ./target/release/encodeme -h
 USAGE:
     encodeme [SUBCOMMAND]
 
