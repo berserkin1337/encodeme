@@ -70,7 +70,7 @@ impl ChunkType {
         }
         true
     }
-    pub fn isAlpha(&self) -> bool {
+    pub fn is_alpha(&self) -> bool {
         for i in 0..4 {
             if !is_valid_byte(self.datatype[i]) {
                 return false;
@@ -97,7 +97,7 @@ impl FromStr for ChunkType {
 
         new_arr[..4].copy_from_slice(&byte_arr[..4]);
         let new_chunk = ChunkType { datatype: new_arr };
-        if !new_chunk.isAlpha() {
+        if !new_chunk.is_alpha() {
             return Err(anyhow::anyhow!("The chunk type is not valid"));
         }
 

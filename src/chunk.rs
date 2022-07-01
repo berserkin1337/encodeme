@@ -1,6 +1,5 @@
 use super::chunk_type::ChunkType;
 use anyhow::Result;
-use crc32fast::Hasher;
 use std::convert::TryFrom;
 use std::fmt;
 use std::io::BufReader;
@@ -22,7 +21,7 @@ impl TryFrom<&[u8]> for Chunk {
         buf.read_exact(&mut len)?;
         let len: u32 = u32::from_be_bytes(len);
         let mut chunk_type: [u8; 4] = [0; 4];
-        buf.read_exact(&mut chunk_type);
+        buf.read_exact(&mut chunk_type)?;
         let value_len = value.len() - 12;
         if value_len != len as usize {
             return Err(anyhow::anyhow!(
@@ -30,16 +29,16 @@ impl TryFrom<&[u8]> for Chunk {
             ));
         }
         let mut data = vec![0; value_len as usize];
-        buf.read_exact(&mut data);
+        buf.read_exact(&mut data)?;
         let mut crc: [u8; 4] = [0; 4];
-        buf.read_exact(&mut crc);
+        buf.read_exact(&mut crc)?;
         let crc: u32 = u32::from_be_bytes(crc);
 
 
         let buf2 = value[4..value.len()-4].to_vec();
-        let mut Hasher = crc32fast::Hasher::new();
-        Hasher.update(buf2.as_slice());
-        let crc2 = Hasher.finalize();
+        let mut hasher = crc32fast::Hasher::new();
+        hasher.update(buf2.as_slice());
+        let crc2 = hasher.finalize();
         if crc != crc2 {
             return Err(anyhow::anyhow!("The CRC of the chunk is not equal to the CRC of the data"));
         }
@@ -70,9 +69,9 @@ impl Chunk {
         let length: usize = data.len();
         // Calculate the crc32 of the data
         let crccalc : Vec<u8>= chunk_type.bytes().iter().chain(data.iter()).copied().collect();
-        let mut Hasher = crc32fast::Hasher::new();
-        Hasher.update(crccalc.as_slice());
-        let crc = Hasher.finalize();
+        let mut hasher = crc32fast::Hasher::new();
+        hasher.update(crccalc.as_slice());
+        let crc = hasher.finalize();
         Chunk {
             length: length as u32,
             chunk_type,

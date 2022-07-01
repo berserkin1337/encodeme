@@ -44,10 +44,10 @@ impl TryFrom<&[u8]> for Png {
                 crc: chunk_crc,
             };
             chunks.push(chunk);
-            let types =  chunk_type.chunk_type();
-            if types == "IEND" {
-                break;
-            }
+            // let types =  chunk_type.chunk_type();
+            // if types == "IEND" {
+            //     break;
+            // }
         }
         Ok(Png { header, chunks })
     }
@@ -64,17 +64,29 @@ impl Display for Png {
 
 impl Png {
     const STANDARD_HEADER: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
-    fn from_chunks(chunks: Vec<Chunk>) -> Png {
+    // Load a png from a file
+    pub fn from_path(path: &str) -> Result<Self, anyhow::Error> {
+        let mut file = std::fs::File::open(path)?;
+        let mut buffer = Vec::new();
+        file.read_to_end(&mut buffer)?;
+        let png = Png::try_from(buffer.as_slice())?;
+        Ok(png)
+    }    
+
+    pub fn from_chunks(chunks: Vec<Chunk>) -> Png {
         Png {
             header: Png::STANDARD_HEADER,
             chunks,
         }
     }
-    fn append_chunk(&mut self, chunk: Chunk) {
+    pub fn prepend_chunk(&mut self, chunk: Chunk) {
+        self.chunks.insert(0, chunk);
+    }
+    pub fn append_chunk(&mut self, chunk: Chunk) {
         // append chunk to chunks
         self.chunks.push(chunk);
     }
-    fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
+    pub fn delete_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
         // remove chunk from chunks
         let chunk_type = ChunkType::from_str(chunk_type)?;
 
@@ -87,19 +99,19 @@ impl Png {
         Ok(chunk)
     }
 
-    fn header(&self) -> &[u8; 8] {
+    pub fn header(&self) -> &[u8; 8] {
         &self.header
     }
-    fn chunks(&self) -> &[Chunk] {
+    pub fn chunks(&self) -> &[Chunk] {
         &self.chunks
     }
 
-    fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
+    pub fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
         let type_u8 = ChunkType::from_str(chunk_type).unwrap();
         self.chunks.iter().find(|x| x.chunk_type == type_u8)
     }
 
-    fn as_bytes(&self) -> Vec<u8> {
+    pub fn as_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.extend_from_slice(&self.header);
         for chunk in &self.chunks {
@@ -229,7 +241,7 @@ mod tests {
     fn test_remove_chunk() {
         let mut png = testing_png();
         png.append_chunk(chunk_from_strings("TeSt", "Message").unwrap());
-        png.remove_chunk("TeSt").unwrap();
+        png.delete_chunk("TeSt").unwrap();
         let chunk = png.chunk_by_type("TeSt");
         assert!(chunk.is_none());
     }
